@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:tflite/tflite.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 
 void main() {
@@ -14,6 +15,7 @@ void main() {
 const String ssd = "SSD MobileNet";
 
 class MyApp extends StatelessWidget {
+  
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -27,7 +29,10 @@ class MyApp extends StatelessWidget {
   }
 }
 
+enum TtsState { playing, stopped, paused, continued }
+
 class OnBoardingPage extends StatefulWidget {
+
   @override
   _OnBoardingPageState createState() => _OnBoardingPageState();
 }
@@ -235,6 +240,42 @@ class TfliteHome extends StatefulWidget {
 class _TfliteHomeState extends State<TfliteHome> {
   File _image;
 
+  FlutterTts flutterTts;
+  String engine;
+  double volume = 1;
+  double pitch = 1.0;
+  double rate = 0.5;
+  List tes = [];
+  List tes1 = [];
+
+  
+  TtsState ttsState = TtsState.stopped;
+
+  Future _speak(List tes1) async {
+    await flutterTts.setVolume(volume);
+    await flutterTts.setSpeechRate(rate);
+    await flutterTts.setPitch(pitch);
+    // print('point11111111111111111111111111111111111');
+    // print(tes1);
+    if (tes1 != null) {
+      if (tes1.isNotEmpty) {
+        if(tes1.length>1){
+            await flutterTts.awaitSpeakCompletion(true);
+            await flutterTts.speak('i see a' + tes1[0] + ' and a ' + tes1[1]);
+        }else{
+            await flutterTts.awaitSpeakCompletion(true);
+            await flutterTts.speak('i see a' + tes1[0]);
+        }
+        
+      }
+    }
+  }
+
+  get isPlaying => ttsState == TtsState.playing;
+  get isStopped => ttsState == TtsState.stopped;
+  get isPaused => ttsState == TtsState.paused;
+  get isContinued => ttsState == TtsState.continued;
+
   double _imageWidth;
   double _imageHeight;
   bool _busy = false;
@@ -244,6 +285,7 @@ class _TfliteHomeState extends State<TfliteHome> {
   @override
   void initState() {
     super.initState();
+    flutterTts = FlutterTts();
     _busy = true;
 
     loadModel().then((val) {
@@ -297,12 +339,34 @@ class _TfliteHomeState extends State<TfliteHome> {
   ssdMobileNet(File image) async {
     var recognitions = await Tflite.detectObjectOnImage(
         path: image.path, numResultsPerClass: 1);
-
-    setState(() {
-      _recognitions = recognitions;
-      print(_recognitions[0]["detectedClass"]);
-    });
+    _recognitions = recognitions;
+    // print(_recognitions);
+    if(_recognitions[0]["confidenceInClass"]>0.5 && _recognitions[1]["confidenceInClass"]>0.5){
+        tes= [];
+        // print(tes);
+        // print(_recognitions[0]["confidenceInClass"].toString() +' , '+ _recognitions[1]["confidenceInClass"].toString());
+        for (var i=0; i<3; i++) {
+            if(!tes.contains(_recognitions[i]["detectedClass"])){
+              tes.insert(i,_recognitions[i]["detectedClass"]);
+              // print('point 2222222222');
+              // print(tes);
+            }
+        }
+        setState(() {
+          tes1 = tes;
+          _speak(tes1);
+        });
+        
+    }else{
+      tes= [];
+      tes.insert(0,_recognitions[0]["detectedClass"]);
+      setState(() {
+          tes1 = tes;
+          _speak(tes1);
+      });
+    }
   }
+
 
   List<Widget> renderBoxes(Size screen) {
     if (_recognitions == null) return [];
