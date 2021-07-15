@@ -80,7 +80,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.only(top: 16, right: 16),
-            child: _buildImage('images/img1.gif', 100),
+            child: _buildImage('images/img5.gif', 100),
           ),
         ),
       ),
@@ -98,23 +98,23 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
       ),
       pages: [
         PageViewModel(
-          title: "Introduction",
+          title: "What's this app?",
           body:
-              "Hello my name is saurabh and i made a object detector app for blinds",
+              "Hello my name is Saurabh Grewal And this app is giving you the third eye,Let your camera see the things around you and then Speaks it Loud to you!",
           image: _buildImage('images/img2.gif'),
           decoration: pageDecoration,
         ),
         PageViewModel(
-          title: "How its made",
+          title: "How its Made?",
           body:
-              "An AI model is trained on the Tenserflowlite and then this app uploads the images to that and then it predicts whats around you!",
+              "A ML model is trained on the TensorFlow Lite whose size is 4mb...it works on device(without internet) and predicts whos around you! Flutter is used to make the Android App :)",
           image: _buildImage('images/img4.gif'),
           decoration: pageDecoration,
         ),
         PageViewModel(
-          title: "How to use it",
+          title: "How to use It?",
           body:
-              "just upload the image you want to check and then it tells you what you are watching and speaks to you",
+              "Just Upload/Click the image you want to check! and the ML model tells you what's in Front of you :)",
           image: _buildImage('images/img3.gif'),
           decoration: pageDecoration,
         ),
@@ -244,7 +244,7 @@ class _TfliteHomeState extends State<TfliteHome> {
   String engine;
   double volume = 1;
   double pitch = 1.0;
-  double rate = 0.5;
+  double rate = 0.7;
   List tes = [];
   List tes1 = [];
 
@@ -309,6 +309,15 @@ class _TfliteHomeState extends State<TfliteHome> {
 
   selectFromImagePicker() async {
     var image = await ImagePicker.pickImage(source: ImageSource.gallery);
+    if (image == null) return;
+    setState(() {
+      _busy = true;
+    });
+    predictImage(image);
+  }
+
+  selectFromCamera() async {
+    var image = await ImagePicker.pickImage(source: ImageSource.camera);
     if (image == null) return;
     setState(() {
       _busy = true;
@@ -412,10 +421,16 @@ class _TfliteHomeState extends State<TfliteHome> {
       top: 0.0,
       left: 0.0,
       width: size.width,
-      child: _image == null ? Text("No Image Selected") : Image.file(_image),
+      child: _image == null ? Center(child: Container(
+        padding: EdgeInsets.only(top:80),
+        child: Text("No Image Selected, Pick an Image",
+            style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold,color: Colors.black)
+            )
+          )
+        ) : Image.file(_image),
     ));
 
-    stackChildren.addAll(renderBoxes(size));
+    stackChildren.addAll(renderBoxes(size));   
 
     if (_busy) {
       stackChildren.add(Center(
@@ -425,20 +440,47 @@ class _TfliteHomeState extends State<TfliteHome> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Object detetction"),
-        backgroundColor: Colors.red,
+        title: Text("Help Me See!",style: TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold,color: Colors.black)),
+        backgroundColor: Colors.yellow,
+        automaticallyImplyLeading: false,
+        systemOverlayStyle: SystemUiOverlayStyle(statusBarColor: Colors.yellow),
       ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.image),
-        backgroundColor: Colors.red,
-        tooltip: "Pick Image from gallery",
-        onPressed: selectFromImagePicker,
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal:10),
+            child: FloatingActionButton.extended (
+                icon: Icon(Icons.image),
+                label: Text('Upload',style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold,color: Colors.black)),
+                backgroundColor: Colors.yellow,
+                tooltip: "Upload from Gallary",
+                onPressed: selectFromImagePicker,
+              ),
+          ),
+          // SizedBox(
+          //   height: 10,
+          // ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal:10),
+            child: FloatingActionButton.extended (
+                icon: Icon(Icons.camera),
+                label: Text('Click',style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold,color: Colors.black)),
+                backgroundColor: Colors.yellow,
+                tooltip: "Pick Image from Camera",
+                onPressed: selectFromCamera,
+              ),
+          ),
+        ]
       ),
       body: Stack(
         children: stackChildren,
       ),
+      // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
+
+
 
 
